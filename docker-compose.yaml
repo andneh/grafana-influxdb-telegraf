@@ -1,0 +1,85 @@
+version: '3'
+
+services:
+  
+
+
+
+  nginx:
+    # container_name: nginx
+    image: nginx:latest
+    ports:
+      - 8180:80
+      - 9443:443
+    depends_on:
+      - grafana
+      - influxdb
+    volumes:
+      - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./conf/nginx/ssl:/etc/nginx/ssl:ro
+      - ./conf/nginx/servers:/etc/nginx/servers:ro
+    networks:
+      - grafana-influxdb-telegraf
+
+
+
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    networks:
+      - grafana-influxdb-telegraf
+    depends_on:
+      - influxdb
+    volumes:
+      # - ./conf/grafana.ini:/etc/grafana/grafana.ini
+      - grafana_data:/var/lib/grafana
+    env_file:
+      - ./envs/grafana.env
+
+
+
+
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf:latest
+    networks:
+      - grafana-influxdb-telegraf
+    depends_on:
+      - influxdb
+    volumes:
+      - ./conf/telegraf.conf:/etc/telegraf/telegraf.conf
+    env_file:
+      - ./envs/telegraf.env
+
+
+  
+
+  influxdb:
+    container_name: influxdb
+    # image: influxdb:latest
+    build:
+      # context: contextPath
+      dockerfile: ./conf/influxdb.dockerfile
+    networks:
+      - grafana-influxdb-telegraf
+    command: ["influx user create --name $USER --password $INFLUX_PASSWORD --org $DOCKER_INFLUXDB_INIT_ORG"]
+    # ports:
+    #   - 8086:8086
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+    env_file:
+      - ./envs/influxdb.env
+      - ./envs/telegraf.env
+
+
+networks:
+  grafana-influxdb-telegraf:
+
+
+
+
+volumes:
+  influxdb_data:
+  grafana_data:
