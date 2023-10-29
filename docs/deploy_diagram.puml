@@ -1,0 +1,39 @@
+@startuml "Deploy diagram"
+
+node pc as "Client"{
+    
+}
+
+node docker as "Docker-compose"{
+    
+    node influxdb_node as "InfluxDB"{
+        database influxdb
+    }
+
+    node grafana_node as "Grafana" {
+        agent grafana
+    }
+    
+    node nginx_node as "NGINX"{
+        agent nginx
+    }
+    
+    node debian_node as "Debian-testing"{
+        agent telegraf
+        agent sshd
+    }
+    
+    
+    telegraf -(0- influxdb : "sql"
+    grafana -(0- influxdb : "sql"
+
+    nginx -(0- influxdb : "http"
+    nginx -(0- grafana : "http"
+    nginx -(0- sshd : "ssh"
+
+    pc -(0- nginx : "ssh"
+    pc -(0- nginx : "https"
+}
+
+
+@enduml
